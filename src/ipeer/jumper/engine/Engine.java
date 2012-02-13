@@ -48,15 +48,17 @@ public class Engine extends Canvas implements Runnable {
 			}
 		}
 		Engine main = new Engine();
-		main.setMaximumSize(new Dimension(width, height));
-		main.setPreferredSize(new Dimension(width, height));
-		JFrame frame = new JFrame(title); // Change Game Engine to your game's name!
+		frame = new JFrame(title); // Change Game Engine to your game's name!
+		//main.setPreferredSize(new Dimension(width, height));
+		main.setSize(width-10, height-10);
+//		frame.setBounds(0, 0, width, height);
 		frame.setDefaultCloseOperation(3);
 		frame.setLayout(new BorderLayout());
 		frame.add(main, "Center");
-		
+		frame.addWindowListener(new iWindowListener());
 		frame.pack();
-		frame.setResizable(true); // change to true if you want users to be able to resize the window.
+		frame.setResizable(false); // change to true if you want users to be able to resize the window.
+		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 		main.start();
 	}
@@ -84,7 +86,7 @@ public class Engine extends Canvas implements Runnable {
 		int ticks = 0;
 		long lastTick = System.currentTimeMillis();
 		init(); // Run the init set above.
-		while (isRunning) { // will loop while the game is running.
+		while (isRunning) { // will loop while the game is running.	
 			long now = System.nanoTime();
 			toprocess += (double)(now - lastTime) / nsPerTick;
 			lastTime = now;
@@ -123,6 +125,7 @@ public class Engine extends Canvas implements Runnable {
 	}
 	
 	public void render() {
+		
 		BufferStrategy bs = getBufferStrategy();
 		if (bs == null) {
 			createBufferStrategy(2); // This (the 2) can be changed if needed.
@@ -144,20 +147,23 @@ public class Engine extends Canvas implements Runnable {
 	}
 	
 	private void renderDebug() {
-		String fps = lastframes+" fps, "+lastticks+" ticks";
+		String fps = lastframes+" fps, "+lastticks+" ticks, "+frame.getWidth()+", "+frame.getHeight()+", "+getWidth()+", "+getHeight();
 		Color c = Colour.WHITE;
 		if (lastframes < 30 || lastticks < 60) {
 			c = Colour.RED;
 		}
-		textRenderer.drawText(fps, 1, height - 2, c);
+		textRenderer.drawText(fps, 0, height-2, c);
+		g.setColor(Colour.YELLOW);
+		g.drawRect(0, 0, width-1, height-1);
 	}
 	
 	private int lastframes, lastticks;
 	private static boolean debugActive = false;
 	private static int height = 480;
 	private static int width = 854;
-	private static String title = "Jumper";
+	private static final String title = "Jumper";
 	public static Graphics g;
 	private TextRenderer textRenderer = new TextRenderer();
+	private static JFrame frame;
 
 }
