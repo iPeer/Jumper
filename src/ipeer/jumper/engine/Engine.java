@@ -6,6 +6,7 @@ import ipeer.jumper.util.Debug;
 
 import java.awt.BorderLayout;
 import java.awt.Canvas;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferStrategy;
@@ -39,7 +40,7 @@ public class Engine extends Canvas implements Runnable {
 	public static void main(String[] args0) {
 		Debug.p("Command line options given: "+args0.length);
 		if (args0.length > 0) {
-			for (int i = 0; i < args0.length;i++) {
+			for (int i = 0; i < args0.length; i++) {
 				if (args0[i].equals("-debug")) {
 					Debug.p("Setting debug to active.");
 					debugActive = true;
@@ -144,11 +145,11 @@ public class Engine extends Canvas implements Runnable {
 	
 	private void renderDebug() {
 		String fps = lastframes+" fps, "+lastticks+" ticks";
+		Color c = Colour.WHITE;
 		if (lastframes < 30 || lastticks < 60) {
-			textRenderer.drawText(fps, 1, height - 2, Colour.RED);
-			return;
+			c = Colour.RED;
 		}
-		textRenderer.drawText(fps, 1, height - 2, Colour.WHITE);
+		textRenderer.drawText(fps, 1, height - 2, c);
 	}
 	
 	private int lastframes, lastticks;
