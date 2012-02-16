@@ -59,6 +59,7 @@ public class Engine extends Canvas implements Runnable {
 		frame.setLayout(new BorderLayout());
 		frame.add(engine, "Center");
 		frame.addWindowListener(new iWindowListener());
+		engine.addKeyListener(new KeyboardListener());
 		frame.pack();
 		frame.setResizable(false); // change to true if you want users to be able to resize the window.
 		frame.setLocationRelativeTo(null);
@@ -114,7 +115,7 @@ public class Engine extends Canvas implements Runnable {
 			}
 			if (!hasFocus()) {
 				try {
-					Thread.sleep(1000/31);
+					//Thread.sleep(1000/31);
 				}
 				catch (Exception e) {
 					e.printStackTrace();
@@ -160,13 +161,13 @@ public class Engine extends Canvas implements Runnable {
 	}
 
 	private void renderDebug() {
-		String fps = lastframes+" fps, "+lastticks+" ticks, "+frame.getWidth()+", "+frame.getHeight()+", "+getWidth()+", "+getHeight();
+		String fps = lastframes+" fps, "+lastticks+" ticks. BlockSize: "+BlockSize;
 		Color c = Colour.WHITE;
 		if (lastframes < 30 || lastticks < 60) {
 			c = Colour.RED;
 		}
 		int i1 = g.getFontMetrics().stringWidth(fps);
-		textRenderer.drawText(fps, width - i1, 12, c);
+		textRenderer.drawText(fps, width - (i1 + 2), 12, c);
 		g.setColor(Colour.YELLOW);
 		g.drawRect(0, 0, width-1, height-1);
 
@@ -196,5 +197,6 @@ public class Engine extends Canvas implements Runnable {
 	private Level level;
 	private static Engine engine;
 	public Player player;
+	public static int BlockSize = 3;
 
 }

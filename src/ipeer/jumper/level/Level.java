@@ -14,6 +14,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -90,7 +91,7 @@ public class Level {
 		try {
 			Debug.p("Attempting to load Level: "+name);
 			Debug.p(Level.class);
-			in = Level.class.getResourceAsStream("img/"+name+".png");
+			in = Level.class.getResourceAsStream("img/"+name.toLowerCase()+".png");
 			Debug.p(in);
 			BufferedImage i = ImageIO.read(in); 
 			//BufferedImage i = ImageUtil.resizeImage(i1, i1.getWidth(null) * 2, i1.getHeight(null) * 2);
@@ -141,12 +142,16 @@ public class Level {
 	public void render() {
 		// Temporary
 		g = Engine.g;
-		for (int y = 0; y < h; y+=10) {
-			for (int x = 0; x < w; x+=10) {
+		int a = Engine.BlockSize;
+		for (int y = 0; y < h; y+=a) {
+			for (int x = 0; x < w; x+=a) {
 				Block b = getBlock(x, y);
 				if (!b.name.equals("Air Block")) {
 					g.setColor(new Color(b.col));
-					g.fillRect(x, y, 9, 9);
+					if (!Arrays.asList("Lava Block", "Water Block").contains(b.name))
+						g.fillRect(x, y, a-1, a-1);
+					else
+						g.fillRect(x, y, a, a);	
 				}
 			}
 		}
