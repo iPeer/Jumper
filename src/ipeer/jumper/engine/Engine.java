@@ -10,14 +10,19 @@ import ipeer.jumper.util.Debug;
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.image.BufferStrategy;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
 
 import javax.swing.JFrame;
 
 public class Engine extends Canvas implements Runnable {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = -3003647165121358744L;
 	public static boolean isRunning = false;
 
 	public Engine() {
@@ -59,7 +64,7 @@ public class Engine extends Canvas implements Runnable {
 		frame.setLayout(new BorderLayout());
 		frame.add(engine, "Center");
 		frame.addWindowListener(new iWindowListener());
-		engine.addKeyListener(new KeyboardListener());
+		engine.addKeyListener(new KeyboardListener(engine));
 		frame.pack();
 		frame.setResizable(false); // change to true if you want users to be able to resize the window.
 		frame.setLocationRelativeTo(null);
@@ -68,11 +73,9 @@ public class Engine extends Canvas implements Runnable {
 	}
 
 	public void init() {
-
-		// Put stuff here that should be done while the game is starting.
 		startGame();
-
 	}
+
 
 	@Override
 	public void run() {
@@ -92,30 +95,35 @@ public class Engine extends Canvas implements Runnable {
 		long lastTick = System.currentTimeMillis();
 		init(); // Run the init set above.
 		while (isRunning) { // will loop while the game is running.	
-			long now = System.nanoTime();
-			toprocess += (double)(now - lastTime) / nsPerTick;
-			lastTime = now;
-			boolean shouldRender;
-			for (shouldRender = true; toprocess >= 1.0; shouldRender = true) {
-				ticks++; // count this tick
-				tick(); // run the tick.
-				toprocess--; // remove 1 from the toprocess queue.
+			try {
+				long now = System.nanoTime();
+				toprocess += (double)(now - lastTime) / nsPerTick;
+				lastTime = now;
+				boolean shouldRender;
+				for (shouldRender = true; toprocess >= 1.0; shouldRender = true) {
+					ticks++; // count this tick
+					tick(); // run the tick.
+					toprocess--; // remove 1 from the toprocess queue.
+				}
+				if (shouldRender) {
+					frames++;
+					render();
+				}
+				if (System.currentTimeMillis() - lastTick > 1000) {
+					lastTick = System.currentTimeMillis();
+					// Output the tick & FPS counts (debug).
+					//System.out.println(frames+ " fps, "+ticks+ " ticks");
+					lastframes = frames;
+					lastticks = ticks;
+					frames = ticks = 0; // reset them both to 0.
+				}
 			}
-			if (shouldRender) {
-				frames++;
-				render();
-			}
-			if (System.currentTimeMillis() - lastTick > 1000) {
-				lastTick = System.currentTimeMillis();
-				// Output the tick & FPS counts (debug).
-				System.out.println(frames+ " fps, "+ticks+ " ticks");
-				lastframes = frames;
-				lastticks = ticks;
-				frames = ticks = 0; // reset them both to 0.
+			catch (OutOfMemoryError e) {
+				Debug.p("***** OUT OF MEMORY! *****");
 			}
 			if (!hasFocus()) {
 				try {
-					//Thread.sleep(1000/31);
+					Thread.sleep(1000/29);
 				}
 				catch (Exception e) {
 					e.printStackTrace();
@@ -126,16 +134,27 @@ public class Engine extends Canvas implements Runnable {
 	}
 
 	public void startGame() {
-		Level.clear();
-		level = Level.loadLevel(this, "Test");
-		player = new Player();
-		player.x = level.xSpawn;
-		player.y = level.ySpawn;
-		level.addEntity(player);
+		try {
+			levelLoading = true;
+			Level.clear();
+			level = Level.loadLevel(this, "Test");
+			player = new Player();
+			player.x = level.xSpawn;
+			player.y = level.ySpawn;
+			player.move(level.xSpawn, level.ySpawn);
+			Debug.p(level.ySpawn+" | "+player.y);
+			level.addEntity(player);
+		}
+		catch (OutOfMemoryError e) {
+			Debug.p("***** OUT OF MEMORY *****");
+		}
 	}
 
 	public void tick() {
-		// Do stuff that should be only ran so often here.
+		for (int i = 0; i < level.entities.size(); i++) {
+			Entity e = level.entities.get(i);
+			e.tick();
+		}
 	}
 
 	public void render() {
@@ -146,36 +165,59 @@ public class Engine extends Canvas implements Runnable {
 			requestFocus();
 			return;
 		}
-		g = bs.getDrawGraphics();
+		Graphics g1 = bs.getDrawGraphics();
+		g = (Graphics2D)g1;
 
 		// This will render the game screen black
 		g.setColor(Colour.BLACK);
-		g.fillRect(0, 0, getWidth(), getHeight());
-		level.render();
+		g.fillRect(0, 0, getWidth(), getHeight());		
+		if (!levelLoading) {
+			level.render();
+		}
+		else {
+			g.setColor(Colour.RED);
+			String loadingString = "Loading level..";
+			Font f = g.getFont();
+			g.setFont(new Font(g.getFont().getName(), Font.PLAIN, 32));
+			int l = g.getFontMetrics().stringWidth(loadingString);
+			g.drawString(loadingString, (width - l) / 2, height / 2);
+			g.setFont(f);
+		}
 		// Do your rendering here. (using g)
 		if (debugActive)
 			renderDebug();
+		for (int i = 0; i < level.entities.size(); i++) {
+			Entity e = level.entities.get(i);
+			e.render();
+		}
 		g.dispose();
 		bs.show();
 
 	}
 
 	private void renderDebug() {
+		MemoryUsage m = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+		long ma = m.getMax() / (1024*1024);
+		long mb = m.getUsed() / (1024*1024);
 		String fps = lastframes+" fps, "+lastticks+" ticks. BlockSize: "+BlockSize;
 		Color c = Colour.WHITE;
 		if (lastframes < 30 || lastticks < 60) {
 			c = Colour.RED;
 		}
-		int i1 = g.getFontMetrics().stringWidth(fps);
+		FontMetrics fm = g.getFontMetrics();
+		int i1 = fm.stringWidth(fps);
 		textRenderer.drawText(fps, width - (i1 + 2), 12, c);
+		String mem = mb+"MB/"+ma+"MB";
+		int i2 = fm.stringWidth(mem);
+		textRenderer.drawText(mb+"MB/"+ma+"MB", width - (i2 + 2), 24, Colour.WHITE);
 		g.setColor(Colour.YELLOW);
 		g.drawRect(0, 0, width-1, height-1);
-
+		
 		g.setColor(Colour.WHITE);
 		g.drawString("Entities", 2, 12);
 		for (int i = 0; i < level.entities.size(); i++) {
 			Entity e = level.entities.get(i);
-			g.drawString("\""+e.name+"\"", 2, 12*(i + 3));
+			g.drawString("\""+e.name+"\" - "+e.getX()+", "+e.getY(), 2, 12*(i + 3));
 		}
 
 	}
@@ -187,16 +229,16 @@ public class Engine extends Canvas implements Runnable {
 	}
 
 	private int lastframes, lastticks;
-	private static boolean debugActive = false;
-	private static int height = 480;
-	private static int width = 854;
+	public static boolean debugActive = false;
+	public static int height = 480, width = 854;
 	private static final String title = "Jumper";
-	public static Graphics g;
+	public static Graphics2D g;
 	private TextRenderer textRenderer = new TextRenderer();
 	private static JFrame frame;
 	private Level level;
 	private static Engine engine;
 	public Player player;
 	public static int BlockSize = 3;
+	public static boolean levelLoading = false;
 
 }

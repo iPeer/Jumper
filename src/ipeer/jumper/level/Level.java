@@ -6,11 +6,12 @@ import ipeer.jumper.entity.Player;
 import ipeer.jumper.level.blocks.AirBlock;
 import ipeer.jumper.level.blocks.Block;
 import ipeer.jumper.level.blocks.LavaBlock;
+import ipeer.jumper.level.blocks.SpawnBlock;
 import ipeer.jumper.level.blocks.TestBlock;
 import ipeer.jumper.util.Debug;
 
 import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -22,13 +23,11 @@ import javax.imageio.ImageIO;
 
 public class Level {
 
-	@SuppressWarnings("unused")
-	private Engine engine;
 	public Level (/*int id, String file, int width, int height*/) {
 		TestBlock = new TestBlock();
 		entities = new ArrayList<Entity>();
 	}
-	
+
 	public void init(Engine engine, int width, int height, int[] pixels) {
 		this.engine = engine;
 		player = engine.player;
@@ -47,34 +46,62 @@ public class Level {
 				block.y = y;
 			}
 		}
-		
+
 		for (int y = 0; y < h; y++) {
 			for (int x = 0; x < w; x++) {
 				int col = pixels[x + y * w] & 0xFFFFFF;
 				colourBlock(x, y, blocks[x + y * w], col);
 			}
 		}
-		
+		this.image = createImageForLevel(/*pixels,*/ w, h);
 	}
 	
+	private BufferedImage createImageForLevel(/*int[] pixels,*/ int w, int h) {
+		//FIXME: Fix memory usage issue!
+		BufferedImage i = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB); // 2
+		g = i.createGraphics();
+		int a = Engine.BlockSize;
+//		int lastx;
+//		int lasty;
+//		lastx = lasty = 0;
+//		int x1 = 1, y1 = 0;
+//		byte of = -16;
+		for (int y = 0; y < h; y+=a) {
+			for (int x = 0; x < w; x+=a) {
+				Block b = getBlock(x, y);
+				if (!b.name.equals("Air Block")) {
+					g.setColor(new Color(b.col));
+					if (!Arrays.asList("Lava Block", "Water Block").contains(b.name)) { 
+						g.fillRect(x, y, a-1, a-1);
+					}
+					else
+						g.fillRect(x, y, a, a);
+				}
+			}
+		}
+		Engine.levelLoading = false;
+		return i;
+	}
+
 	public Block getBlock(int x, int y) {
 		if (x < 0 || y < 0 || y > h || x > w) {
 			return new AirBlock();
 		}
 		return blocks[x + y * w];
 	}
-	
+
 	protected void colourBlock(int x, int y, Block block, int col) {
-//		if (col == 0x000000)
-//			block.col = 0xFFFFFF;
-		if (col == 010000) {
+		//		if (col == 0x000000)
+		//			block.col = 0xFFFFFF;
+		if (col == 0x65B6AE) {
 			xSpawn = x;
 			ySpawn = y;
+			Debug.p("Spawn is at: ("+x+", "+y+")");
 			block.col = 0x0a0a0a;
 		}
-			
+
 	}
-	
+
 	protected Block getBlock(int x, int y, int col) {
 		if (col == 0x000000) {
 			return new TestBlock();
@@ -82,10 +109,14 @@ public class Level {
 		if (col == 0xFF0000) {
 			return new LavaBlock();
 		}
+		if (col == 0x65B6AE) {
+			return new SpawnBlock();
+		}
 		return new AirBlock();
 	}
 
 	public static Level loadLevel(Engine engine, String name) {
+		Engine.levelLoading = true;
 		InputStream in;
 		Level level;
 		try {
@@ -104,7 +135,7 @@ public class Level {
 			//level.createStill(engine, wi, hi, pixels);
 			LevelCache.put(name, level);
 			return level;
-			
+
 		}
 		catch (Exception e) {
 			Debug.p("Unable to load level!");
@@ -112,10 +143,10 @@ public class Level {
 			Engine.stopDueToError(e);
 		}
 		return null;
-		
+
 	}
 
-	
+
 	private static Level getLevelClassForName(String name) {
 		Level level = null;
 		try {
@@ -128,7 +159,7 @@ public class Level {
 		}
 		return level;
 	}
-	
+
 	public void addEntity(Entity e) {
 		entities.add(e);
 		e.level = this;
@@ -136,27 +167,16 @@ public class Level {
 	}
 
 	public static void clear() {
+		blocks = new Block[0];
 		LevelCache.clear();
 	}
-	
+
 	public void render() {
-		// Temporary
+		BufferedImage i = image;
 		g = Engine.g;
-		int a = Engine.BlockSize;
-		for (int y = 0; y < h; y+=a) {
-			for (int x = 0; x < w; x+=a) {
-				Block b = getBlock(x, y);
-				if (!b.name.equals("Air Block")) {
-					g.setColor(new Color(b.col));
-					if (!Arrays.asList("Lava Block", "Water Block").contains(b.name))
-						g.fillRect(x, y, a-1, a-1);
-					else
-						g.fillRect(x, y, a, a);	
-				}
-			}
-		}
+		g.drawImage(i, 0, 0, null);
 	}
-	
+
 	public int w, h;
 	@SuppressWarnings("unused")
 	private int id;
@@ -167,7 +187,9 @@ public class Level {
 	Player player;
 	Block TestBlock;
 	public ArrayList<Entity> entities;
-	public Block[] blocks;
-	private Graphics g = Engine.g;
+	public static Block[] blocks;
+	private Graphics2D g;
+	private Engine engine;
+	private BufferedImage image;
 
 }

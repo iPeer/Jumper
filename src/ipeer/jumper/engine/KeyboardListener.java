@@ -1,5 +1,6 @@
 package ipeer.jumper.engine;
 
+import ipeer.jumper.util.Debug;
 import ipeer.jumper.util.Keyboard;
 
 import java.awt.event.KeyEvent;
@@ -9,6 +10,9 @@ import java.util.Arrays;
 
 public class KeyboardListener implements KeyListener {
 
+	public KeyboardListener(Engine e) {
+		this.engine = e;
+	}
 	@Override
 	public void keyPressed(KeyEvent arg0) {
 		int key = arg0.getKeyCode();
@@ -22,6 +26,9 @@ public class KeyboardListener implements KeyListener {
 			Engine.isRunning = false;
 			System.exit(0);
 		}
+		if (key == 82) {
+			engine.startGame();
+		}
 	}
 
 	@Override
@@ -32,5 +39,7 @@ public class KeyboardListener implements KeyListener {
 	public void keyTyped(KeyEvent arg0) {
 	}
 
+	private Engine engine;
+	
 
 }
