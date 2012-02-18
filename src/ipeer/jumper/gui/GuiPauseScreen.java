@@ -1,10 +1,8 @@
 package ipeer.jumper.gui;
 
 import ipeer.jumper.engine.Engine;
-import ipeer.jumper.util.Colour;
-import ipeer.jumper.util.Debug;
+import ipeer.jumper.level.Level;
 
-import java.awt.Font;
 import java.awt.Graphics2D;
 
 public class GuiPauseScreen extends Gui {
@@ -14,10 +12,9 @@ public class GuiPauseScreen extends Gui {
 		this.engine = engine;
 		g = Engine.g;
 		title = "Game Menu";
-		pausetime = 60;
 		controls.add(new GuiButton(0,(Engine.width - 200) /2, (Engine.height / 2) - 32, "Back to Game"));
-		controls.add(new GuiButton(1,(Engine.width - 200) /2, (Engine.height / 2) + 2, "Quit Game"));
-
+		controls.add(new GuiButton(2,(Engine.width - 200) /2, (Engine.height / 2) + 2, "Back to Title"));
+		controls.add(new GuiButton(1,(Engine.width - 200) /2, (Engine.height / 2) + 36, "Quit Game"));
 	}
 	
 	public void render() {
@@ -28,7 +25,6 @@ public class GuiPauseScreen extends Gui {
 	}
 	
 	public void tick() {
-		pausetime--;
 	}
 	
 	public boolean pausesGame() {
@@ -42,11 +38,12 @@ public class GuiPauseScreen extends Gui {
 		if (button.id == 1) {
 			engine.setGUI(new GuiConfirmQuit(this, engine));
 		}
+		if (button.id == 2) {
+			engine.loadMenuScreen();
+		}
 	}
 	
-	@SuppressWarnings("unused")
 	private Engine engine;
 	private Graphics2D g;
-	private int pausetime;
 	
 }

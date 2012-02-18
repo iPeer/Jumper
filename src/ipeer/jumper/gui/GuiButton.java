@@ -23,28 +23,36 @@ public class GuiButton extends Gui {
 	
 	public void render() {
 		Graphics2D g = Engine.g;
-		g.setColor(Colour.GUIBUTTON);
+		g.setColor(new Colour(808080));
+		if (isMouseOver())
+			g.setColor(new Colour(818080));
 		if (!enabled)
-			g.setColor(Colour.GUIBUTTONDISABLED);
-		g.fillRect(xPos, yPos, width, height);
+			g.setColor(new Colour(808080));
+		g.fill3DRect(xPos, yPos, width, height, enabled);
 		g.setColor(Colour.WHITE);
-		g.drawRect(xPos, yPos, width, height);
 		int i = g.getFontMetrics().stringWidth(text);
-		g.drawString(text, (xPos + (width - i) / 2), yPos + ((10 + height) / 2));
+		g.drawString(text, (xPos + (width - i) / 2), yPos + ((9 + height) / 2));
 	}
 	
 	public void tick() { super.tick(); }
 	
+	
 	public void mouseReleased(int x, int y) { }
 	public void mouseDragged(Engine engine, int x, int y) { }
+	
+	public boolean isMouseOver() {
+		return isMouseOver;
+	}
 	
 	public boolean mousePressed(Engine engine, int x, int y) {
 		return enabled && x > xPos && x < (xPos + width) && y < (yPos + height) && y > yPos;
 	}
 	
-	private int xPos, yPos, width, height;
+	
+	public int xPos, yPos, width, height;
 	public String text;
 	public boolean enabled;
 	public int id;
+	public boolean isMouseOver = false;
 	
 }

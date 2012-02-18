@@ -1,9 +1,11 @@
 package ipeer.jumper.engine;
 
 import ipeer.jumper.entity.Entity;
+import ipeer.jumper.entity.EntityCloud;
 import ipeer.jumper.entity.Player;
 import ipeer.jumper.gfx.TextRenderer;
 import ipeer.jumper.gui.Gui;
+import ipeer.jumper.gui.GuiMainMenu;
 import ipeer.jumper.gui.GuiPauseScreen;
 import ipeer.jumper.level.Level;
 import ipeer.jumper.util.Colour;
@@ -19,6 +21,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferStrategy;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
+import java.util.Random;
 
 import javax.swing.JFrame;
 
@@ -68,6 +71,7 @@ public class Engine extends Canvas implements Runnable {
 		frame.add(engine, "Center");
 		frame.addWindowListener(new iWindowListener());
 		engine.addMouseListener(new iMouseListener(engine));
+		engine.addMouseMotionListener(new iMouseMotionListener(engine));
 		// engine.addKeyListener(new KeyboardListener(engine));
 		frame.pack();
 		frame.setResizable(false); // change to true if you want users to be
@@ -80,7 +84,7 @@ public class Engine extends Canvas implements Runnable {
 
 	public void init() {
 		input = new KeyboardListener(engine);
-		startGame();
+		loadMenuScreen();
 	}
 
 	@Override
@@ -125,7 +129,7 @@ public class Engine extends Canvas implements Runnable {
 			} catch (OutOfMemoryError e) {
 				Debug.p("***** OUT OF MEMORY! *****");
 			}
-			if (!hasFocus()) {
+			if (!hasFocus() && gui == null) {
 				setGUI(new GuiPauseScreen(this));
 				try {
 					Thread.sleep(1000 / 29);
@@ -136,6 +140,17 @@ public class Engine extends Canvas implements Runnable {
 
 		}
 	}
+	
+	public void loadMenuScreen() {
+		levelLoading = true;
+		Level.clear();
+		level = Level.loadLevel(this, "Menu");
+		for (int i = 0; i < 20; i++) {
+			level.addEntity(new EntityCloud(new Random().nextInt(width), new Random().nextInt(200)));
+		}
+		this.setGUI(new GuiMainMenu(this));
+	}
+	                           
 
 	public void startGame() {
 		try {
@@ -147,14 +162,17 @@ public class Engine extends Canvas implements Runnable {
 			player.y = level.ySpawn - 2;
 			player.move(level.xSpawn, level.ySpawn - 2);
 			level.addEntity(player);
+			for (int i = 0; i < 20; i++) {
+				level.addEntity(new EntityCloud(new Random().nextInt(width), new Random().nextInt(200)));
+			}
 		} catch (OutOfMemoryError e) {
 			Debug.p("***** OUT OF MEMORY *****");
 		}
 	}
 
 	public void tick() {
-		if (input.pause.down && System.currentTimeMillis() - lastPress > 150) {
-			setGUI((gui instanceof GuiPauseScreen ? null : new GuiPauseScreen(this)));
+		if (input.pause.down && System.currentTimeMillis() - lastPress > 150 && !(gui instanceof GuiMainMenu)/* && !(gui instanceof GuiDeathMenu)*/) {
+			setGUI((gui instanceof GuiPauseScreen ? gui.parent : new GuiPauseScreen(this)));
 			lastPress = System.currentTimeMillis();
 		}
 		if (input.quit.down) {
@@ -191,7 +209,7 @@ public class Engine extends Canvas implements Runnable {
 		g = (Graphics2D) g1;
 
 		// This will render the game screen black
-		g.setColor(Colour.LIGHT_GRAY);
+		g.setColor(Colour.BLACK);
 		g.fillRect(0, 0, getWidth(), getHeight());
 		if (!levelLoading) {
 			level.render();
@@ -204,14 +222,12 @@ public class Engine extends Canvas implements Runnable {
 			g.drawString(loadingString, (width - l) / 2, height / 2);
 			g.setFont(f);
 		}
-		// Do your rendering here. (using g)
-		
 		for (int i = 0; i < level.entities.size(); i++) {
 			Entity e = level.entities.get(i);
 			e.render();
 		}
 		
-		if (gui != null)
+		if (gui != null && !levelLoading)
 			gui.render();
 		
 		if (debugActive)
@@ -263,6 +279,7 @@ public class Engine extends Canvas implements Runnable {
 	public static boolean debugActive = false;
 	public static int height = 480, width = 854;
 	private static final String title = "Jumper";
+	public static final String VERSION = "1.0";
 	public static Graphics2D g;
 	private TextRenderer textRenderer = new TextRenderer();
 	private static JFrame frame;

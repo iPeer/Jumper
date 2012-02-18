@@ -42,7 +42,7 @@ public class Colour extends Color {
 		
 	}
 	
-	public static Colour GUIBUTTONDISABLED = new Colour(333333);
-	public static Colour GUIBUTTON = new Colour(515151);
+	public static Colour GUIBUTTONDISABLED = new Colour(808080);
+	public static Colour GUIBUTTON = new Colour(808080);
 
 }

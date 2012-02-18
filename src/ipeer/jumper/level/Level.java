@@ -5,6 +5,7 @@ import ipeer.jumper.entity.Entity;
 import ipeer.jumper.entity.Player;
 import ipeer.jumper.level.blocks.AirBlock;
 import ipeer.jumper.level.blocks.Block;
+import ipeer.jumper.level.blocks.GrassBlock;
 import ipeer.jumper.level.blocks.LavaBlock;
 import ipeer.jumper.level.blocks.SpawnBlock;
 import ipeer.jumper.level.blocks.TestBlock;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 
@@ -63,8 +65,8 @@ public class Level {
 	private BufferedImage createImageForLevel(/*int[] pixels,*/ int w, int h, String name) {
 		BufferedImage i = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB); // 2
 		g = i.createGraphics();
-		if (name.toLowerCase().equals("test")) {
-			g.setPaint(new GradientPaint(0, 0, Colour.BLUE, 0, Engine.height, Colour.CYAN));
+		if (Arrays.asList("test", "menu").contains(name.toLowerCase())) {
+			g.setPaint(new GradientPaint(0, 0, new Colour(0x9FE4FF), 0, Engine.height, Colour.CYAN));
 			g.fillRect(0, 0, Engine.width, Engine.height);
 		}
 		int a = Engine.BlockSize;
@@ -100,6 +102,9 @@ public class Level {
 			ySpawn = y - Player.getHeight();
 			Debug.p("Spawn is at: ("+xSpawn+", "+ySpawn+")");
 		}
+		if (col == 0x4CFF00) {
+			block.col = new Colour(76, new Random().nextInt(40)+215, 0).getRGB();
+		}
 
 	}
 
@@ -112,6 +117,9 @@ public class Level {
 		}
 		if (col == 0x65B6AE) {
 			return new SpawnBlock();
+		}
+		if (col == 0x4CFF00) {
+			return new GrassBlock();
 		}
 		return new AirBlock();
 	}
@@ -170,6 +178,8 @@ public class Level {
 	public static void clear() {
 		blocks = new Block[0];
 		LevelCache.clear();
+		if (entities != null && !entities.isEmpty())
+			entities.clear();
 	}
 
 	public boolean checkTerrainCollision(Player p) {
@@ -206,7 +216,7 @@ public class Level {
 	private static Map<String, Level> LevelCache = new HashMap<String, Level>();
 	Player player;
 	Block TestBlock;
-	public ArrayList<Entity> entities;
+	public static ArrayList<Entity> entities;
 	public static Block[] blocks;
 	private Graphics2D g;
 	private Engine engine;

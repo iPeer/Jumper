@@ -70,5 +70,6 @@ public class Gui {
 	protected Engine engine;
 	public String title;
 	public ArrayList controls;
+	public Gui parent = null;
 	
 }

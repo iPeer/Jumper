@@ -107,8 +107,6 @@ public class KeyboardListener implements KeyListener {
 			left.toggle(flag);
 		if (k == KeyEvent.VK_DOWN)
 			down.toggle(flag);
-		if (k == KeyEvent.VK_P)
-			pause.toggle(flag);
 
 		if (k == KeyEvent.VK_SPACE)
 			jump.toggle(flag);
@@ -120,7 +118,7 @@ public class KeyboardListener implements KeyListener {
 		if (k == KeyEvent.VK_F4)
 			rendering.toggle(flag);
 		
-		if (k == KeyEvent.VK_ESCAPE || k == KeyEvent.VK_Q)
-			quit.toggle(flag);
+		if (k == KeyEvent.VK_ESCAPE || k == KeyEvent.VK_Q || k == KeyEvent.VK_P)
+			pause.toggle(flag);
 	}	
 }

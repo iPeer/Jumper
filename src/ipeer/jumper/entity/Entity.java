@@ -60,6 +60,7 @@ public class Entity {
 	public String name;
 	public int x, y;
 	private boolean isOnGround;
+	public int width, height;
 	
 	
 }
