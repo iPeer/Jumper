@@ -41,5 +41,8 @@ public class Colour extends Color {
 		super(r, g, b, a);
 		
 	}
+	
+	public static Colour GUIBUTTONDISABLED = new Colour(333333);
+	public static Colour GUIBUTTON = new Colour(515151);
 
 }

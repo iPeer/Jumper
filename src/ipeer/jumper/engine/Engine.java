@@ -3,6 +3,8 @@ package ipeer.jumper.engine;
 import ipeer.jumper.entity.Entity;
 import ipeer.jumper.entity.Player;
 import ipeer.jumper.gfx.TextRenderer;
+import ipeer.jumper.gui.Gui;
+import ipeer.jumper.gui.GuiPauseScreen;
 import ipeer.jumper.level.Level;
 import ipeer.jumper.util.Colour;
 import ipeer.jumper.util.Debug;
@@ -47,7 +49,7 @@ public class Engine extends Canvas implements Runnable {
 	// So we can run it as an application should we need to do.
 	public static void main(String[] args0) {
 		Debug.p("Command line options given: " + args0.length);
-		debugActive = true;
+		//debugActive = true;
 		if (args0.length > 0) {
 			for (int i = 0; i < args0.length; i++) {
 				if (args0[i].equals("-debug")) {
@@ -65,12 +67,14 @@ public class Engine extends Canvas implements Runnable {
 		frame.setLayout(new BorderLayout());
 		frame.add(engine, "Center");
 		frame.addWindowListener(new iWindowListener());
+		engine.addMouseListener(new iMouseListener(engine));
 		// engine.addKeyListener(new KeyboardListener(engine));
 		frame.pack();
 		frame.setResizable(false); // change to true if you want users to be
 		// able to resize the window.
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
+		engine.requestFocus();
 		engine.start();
 	}
 
@@ -122,7 +126,7 @@ public class Engine extends Canvas implements Runnable {
 				Debug.p("***** OUT OF MEMORY! *****");
 			}
 			if (!hasFocus()) {
-				isPaused = true;
+				setGUI(new GuiPauseScreen(this));
 				try {
 					Thread.sleep(1000 / 29);
 				} catch (Exception e) {
@@ -140,9 +144,8 @@ public class Engine extends Canvas implements Runnable {
 			player = new Player();
 			level = Level.loadLevel(this, "Test");
 			player.x = level.xSpawn;
-			player.y = level.ySpawn;
-			player.move(level.xSpawn, level.ySpawn);
-			Debug.p(level.ySpawn + " | " + player.y);
+			player.y = level.ySpawn - 2;
+			player.move(level.xSpawn, level.ySpawn - 2);
 			level.addEntity(player);
 		} catch (OutOfMemoryError e) {
 			Debug.p("***** OUT OF MEMORY *****");
@@ -150,6 +153,10 @@ public class Engine extends Canvas implements Runnable {
 	}
 
 	public void tick() {
+		if (input.pause.down && System.currentTimeMillis() - lastPress > 150) {
+			setGUI((gui instanceof GuiPauseScreen ? null : new GuiPauseScreen(this)));
+			lastPress = System.currentTimeMillis();
+		}
 		if (input.quit.down) {
 			isRunning = false;
 			System.exit(0);
@@ -160,15 +167,15 @@ public class Engine extends Canvas implements Runnable {
 			debugActive = !debugActive;
 			lastPress = System.currentTimeMillis();
 		}
-		if (!isPaused) {
+		if (!isPaused && (gui == null || !gui.pausesGame())) {
 			input.tick();
 			for (int i = 0; i < level.entities.size(); i++) {
 				Entity e = level.entities.get(i);
 				e.tick();
 			}
 		}
-		else {
-			pauseflash--;
+		if (gui != null) {
+			gui.tick();
 		}
 	}
 
@@ -184,7 +191,7 @@ public class Engine extends Canvas implements Runnable {
 		g = (Graphics2D) g1;
 
 		// This will render the game screen black
-		g.setColor(Colour.BLACK);
+		g.setColor(Colour.LIGHT_GRAY);
 		g.fillRect(0, 0, getWidth(), getHeight());
 		if (!levelLoading) {
 			level.render();
@@ -198,38 +205,28 @@ public class Engine extends Canvas implements Runnable {
 			g.setFont(f);
 		}
 		// Do your rendering here. (using g)
-		if (debugActive)
-			renderDebug();
+		
 		for (int i = 0; i < level.entities.size(); i++) {
 			Entity e = level.entities.get(i);
 			e.render();
 		}
-		if (isPaused) {
-			Font f = g.getFont();
-			g.setFont(new Font(g.getFont().getFontName(), Font.BOLD, 32));
-			if (pauseflash > 30)
-				g.setColor(Colour.YELLOW);
-			else
-				g.setColor(Colour.RED);
-			if (pauseflash < 0)
-				pauseflash = 60;
-			String p = "PAUSED!";
-			int p1 = g.getFontMetrics().stringWidth(p);
-			g.drawString(p, (width - p1) / 2, height / 2);
-			g.setFont(f);
-		}
+		
+		if (gui != null)
+			gui.render();
+		
+		if (debugActive)
+			renderDebug();
+
 		g.dispose();
 		bs.show();
 
 	}
 
 	private void renderDebug() {
-		MemoryUsage m = ManagementFactory.getMemoryMXBean()
-		.getHeapMemoryUsage();
+		MemoryUsage m = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
 		long ma = m.getMax() / (1024 * 1024);
 		long mb = m.getUsed() / (1024 * 1024);
-		String fps = lastframes + " fps, " + lastticks + " ticks. BlockSize: "
-		+ BlockSize;
+		String fps = lastframes + " fps, " + lastticks + " ticks";
 		Color c = Colour.WHITE;
 		if (lastframes < 30 || lastticks < 60) {
 			c = Colour.RED;
@@ -239,8 +236,7 @@ public class Engine extends Canvas implements Runnable {
 		textRenderer.drawText(fps, width - (i1 + 2), 12, c);
 		String mem = mb + "MB/" + ma + "MB";
 		int i2 = fm.stringWidth(mem);
-		textRenderer.drawText(mb + "MB/" + ma + "MB", width - (i2 + 2), 24,
-				Colour.WHITE);
+		textRenderer.drawText(mb + "MB/" + ma + "MB", width - (i2 + 2), 24, Colour.WHITE);
 		g.setColor(Colour.YELLOW);
 		g.drawRect(0, 0, width - 1, height - 1);
 
@@ -248,8 +244,7 @@ public class Engine extends Canvas implements Runnable {
 		g.drawString("Entities", 2, 12);
 		for (int i = 0; i < level.entities.size(); i++) {
 			Entity e = level.entities.get(i);
-			g.drawString("\"" + e.name + "\" - " + e.getX() + ", " + e.getY()
-					+ ", " + e.isOnGround(), 2, 12 * (i + 3));
+			g.drawString("\"" + e.name + "\" - " + e.getX() + ", " + e.getY() + ", " + e.isOnGround(), 2, 12 * (i + 3));
 		}
 
 	}
@@ -260,6 +255,10 @@ public class Engine extends Canvas implements Runnable {
 		isRunning = false;
 	}
 
+	public void setGUI(Gui gui) {
+		this.gui = gui;
+	}
+	
 	private int lastframes, lastticks;
 	public static boolean debugActive = false;
 	public static int height = 480, width = 854;
@@ -275,6 +274,6 @@ public class Engine extends Canvas implements Runnable {
 	public static KeyboardListener input;
 	long lastPress = 0;
 	public boolean isPaused = false;
-	private int pauseflash = 60;
+	public Gui gui = null;
 
 }

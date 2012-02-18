@@ -44,6 +44,7 @@ public class KeyboardListener implements KeyListener {
 	public Key rendering;
 	public Key reload;
 	public Key quit;
+	public Key pause;
 
 	public void tick() {
 		for (int i = 0; i < keys.size(); i++) {
@@ -69,6 +70,7 @@ public class KeyboardListener implements KeyListener {
 		rendering = new Key();
 		reload = new Key();
 		quit = new Key();
+		pause = new Key();
 		e.addKeyListener(this);
 	}
 	@Override
@@ -105,6 +107,8 @@ public class KeyboardListener implements KeyListener {
 			left.toggle(flag);
 		if (k == KeyEvent.VK_DOWN)
 			down.toggle(flag);
+		if (k == KeyEvent.VK_P)
+			pause.toggle(flag);
 
 		if (k == KeyEvent.VK_SPACE)
 			jump.toggle(flag);

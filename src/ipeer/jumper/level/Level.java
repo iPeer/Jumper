@@ -8,9 +8,11 @@ import ipeer.jumper.level.blocks.Block;
 import ipeer.jumper.level.blocks.LavaBlock;
 import ipeer.jumper.level.blocks.SpawnBlock;
 import ipeer.jumper.level.blocks.TestBlock;
+import ipeer.jumper.util.Colour;
 import ipeer.jumper.util.Debug;
 
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
@@ -21,6 +23,7 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+@SuppressWarnings({"static-access", "unused"})
 public class Level {
 
 	public Level (/*int id, String file, int width, int height*/) {
@@ -28,10 +31,10 @@ public class Level {
 		entities = new ArrayList<Entity>();
 	}
 
-	public void init(Engine engine, int width, int height, int[] pixels) {
+	public void init(Engine engine, int width, int height, int[] pixels, String name) {
 		this.engine = engine;
 		player = engine.player;
-		this.player = player;
+		//this.player = player;
 		w = width;
 		h = height;
 		blocks = new Block[w * h];
@@ -54,19 +57,17 @@ public class Level {
 				colourBlock(x, y, blocks[x + y * w], col);
 			}
 		}
-		this.image = createImageForLevel(/*pixels,*/ w, h);
+		this.image = createImageForLevel(/*pixels,*/ w, h, name);
 	}
 	
-	private BufferedImage createImageForLevel(/*int[] pixels,*/ int w, int h) {
-		//FIXME: Fix memory usage issue!
+	private BufferedImage createImageForLevel(/*int[] pixels,*/ int w, int h, String name) {
 		BufferedImage i = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB); // 2
 		g = i.createGraphics();
+		if (name.toLowerCase().equals("test")) {
+			g.setPaint(new GradientPaint(0, 0, Colour.BLUE, 0, Engine.height, Colour.CYAN));
+			g.fillRect(0, 0, Engine.width, Engine.height);
+		}
 		int a = Engine.BlockSize;
-//		int lastx;
-//		int lasty;
-//		lastx = lasty = 0;
-//		int x1 = 1, y1 = 0;
-//		byte of = -16;
 		for (int y = 0; y < h; y+=a) {
 			for (int x = 0; x < w; x+=a) {
 				Block b = getBlock(x, y);
@@ -131,7 +132,7 @@ public class Level {
 			int[] pixels = new int[wi * hi];
 			i.getRGB(0, 0, wi, hi, pixels, 0, wi);
 			level = getLevelClassForName(name);
-			level.init(engine, wi, hi, pixels);
+			level.init(engine, wi, hi, pixels, name);
 			//level.createStill(engine, wi, hi, pixels);
 			LevelCache.put(name, level);
 			return level;
@@ -198,7 +199,6 @@ public class Level {
 	}
 
 	public int w, h;
-	@SuppressWarnings("unused")
 	private int id;
 	public int xSpawn, ySpawn;
 	public String f, name;
