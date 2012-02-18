@@ -37,11 +37,15 @@ public class Entity {
 	}
 	
 	public int getX() {
-		return x;
+		return this.x;
 	}
 	
 	public int getY() {
-		return y;
+		return this.y;
+	}
+	
+	public boolean isOnGround() {
+		return this.isOnGround;
 	}
 	
 	public void move(int x, int y) {
@@ -55,6 +59,7 @@ public class Entity {
 	public Level level;
 	public String name;
 	public int x, y;
+	private boolean isOnGround;
 	
 	
 }

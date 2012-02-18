@@ -31,6 +31,7 @@ public class Level {
 	public void init(Engine engine, int width, int height, int[] pixels) {
 		this.engine = engine;
 		player = engine.player;
+		this.player = player;
 		w = width;
 		h = height;
 		blocks = new Block[w * h];
@@ -95,9 +96,8 @@ public class Level {
 		//			block.col = 0xFFFFFF;
 		if (col == 0x65B6AE) {
 			xSpawn = x;
-			ySpawn = y;
-			Debug.p("Spawn is at: ("+x+", "+y+")");
-			block.col = 0x0a0a0a;
+			ySpawn = y - Player.getHeight();
+			Debug.p("Spawn is at: ("+xSpawn+", "+ySpawn+")");
 		}
 
 	}
@@ -171,6 +171,26 @@ public class Level {
 		LevelCache.clear();
 	}
 
+	public boolean checkTerrainCollision(Player p) {
+		return getBlock(p.x + (p.width + 1), p.y).isSolid || getBlock(p.x, p.y + (p.height + 1)).isSolid || getBlock(p.x - 1, p.y - 1).isSolid || getBlock(p.x + (p.width + 1), p.y + (p.height + 1)).isSolid;
+	}
+	
+	public boolean isPlayerOnSolidBlock(Player p) {
+		return getBlock(p.x + (p.height + 1), p.y).isSolid;
+	}
+	
+	public boolean playerIsInBlock(Player p) {
+		boolean x = false;
+		boolean y = false;
+		for (int y1 = p.y; y1 < (p.y + p.height); y1++) {
+			y = getBlock(p.x + 1, y1 + 1).isSolid;
+		}
+		for (int x1 = p.x; x1 < (p.x + p.width); x1++) {
+			x = getBlock(x1 + 1, p.y + 1).isSolid;
+		}
+		return x || y;
+	}
+	
 	public void render() {
 		BufferedImage i = image;
 		g = Engine.g;

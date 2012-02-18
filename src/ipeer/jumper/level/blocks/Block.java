@@ -26,7 +26,7 @@ public class Block {
 		
 	}
 
-	protected boolean isSolid;
+	public boolean isSolid;
 	public int id, x, y, col;
 	public Level level;
 	public String name;

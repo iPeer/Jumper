@@ -1,45 +1,122 @@
 package ipeer.jumper.engine;
 
-import ipeer.jumper.util.Debug;
-import ipeer.jumper.util.Keyboard;
-
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.Arrays;
+import java.util.ArrayList;
 
 
 public class KeyboardListener implements KeyListener {
+	
+	public class Key {
+
+		public boolean down, pressed, pressed1;
+		public int presses, multi;
+
+		public Key() {
+			keys.add(this);
+		}
+
+		public void toggle(boolean flag) {
+			if (down != flag)
+				down = flag;
+			if (flag)
+				presses++;
+		}
+
+		public void tick() {
+			if (multi < presses) {
+				multi++;
+				pressed1 = true;
+			} else {
+				pressed1 = false;
+			}
+		}
+
+	}
+
+	public ArrayList<Key> keys;
+	public Key left;
+	public Key right;
+	public Key up;
+	public Key down;
+	public Key jump;
+	public Key debug;
+	public Key rendering;
+	public Key reload;
+	public Key quit;
+
+	public void tick() {
+		for (int i = 0; i < keys.size(); i++) {
+			((Key) keys.get(i)).tick();
+		}
+	}
+
+	public void releaseAll() {
+		for (int i = 0; i < keys.size(); i++) {
+			((Key) keys.get(i)).down = false;
+		}
+	}
 
 	public KeyboardListener(Engine e) {
-		this.engine = e;
+		keys = new ArrayList<Key>();
+		up = new Key();
+		left = new Key();
+		right = new Key();
+		up = new Key();
+		down = new Key();
+		jump = new Key();
+		debug = new Key();
+		rendering = new Key();
+		reload = new Key();
+		quit = new Key();
+		e.addKeyListener(this);
 	}
 	@Override
-	public void keyPressed(KeyEvent arg0) {
-		int key = arg0.getKeyCode();
-		if (Arrays.asList(61, 107).contains(key)) {
-			Engine.BlockSize++;
-		}
-		if (Arrays.asList(45, 109).contains(key) && Engine.BlockSize > 1) {
-			Engine.BlockSize--;
-		}
-		if (Arrays.asList(27, Keyboard.VK_Q).contains(key)) {
-			Engine.isRunning = false;
-			System.exit(0);
-		}
-		if (key == 82) {
-			engine.startGame();
-		}
+	public void keyPressed(KeyEvent e) {
+		toggle(e, true);
 	}
 
 	@Override
-	public void keyReleased(KeyEvent arg0) {
+	public void keyReleased(KeyEvent e) {
+		toggle(e, false);
 	}
 
 	@Override
-	public void keyTyped(KeyEvent arg0) {
+	public void keyTyped(KeyEvent e) {
 	}
 
-	private Engine engine;
-	
+	private void toggle(KeyEvent ke, boolean flag) {
+		int k = ke.getKeyCode();
+		if (k == KeyEvent.VK_W)
+			up.toggle(flag);
+		if (k == KeyEvent.VK_A)
+			left.toggle(flag);
+		if (k == KeyEvent.VK_D)
+			right.toggle(flag);
+		if (k == KeyEvent.VK_S)
+			down.toggle(flag);
+		if (k == KeyEvent.VK_R)
+			reload.toggle(flag);
+		if (k == KeyEvent.VK_UP)
+			up.toggle(flag);
+		if (k == KeyEvent.VK_RIGHT)
+			right.toggle(flag);
+		if (k == KeyEvent.VK_LEFT)
+			left.toggle(flag);
+		if (k == KeyEvent.VK_DOWN)
+			down.toggle(flag);
 
+		if (k == KeyEvent.VK_SPACE)
+			jump.toggle(flag);
+		if (k == KeyEvent.VK_J)
+			jump.toggle(flag);
+
+		if (k == KeyEvent.VK_F3)
+			debug.toggle(flag);
+		if (k == KeyEvent.VK_F4)
+			rendering.toggle(flag);
+		
+		if (k == KeyEvent.VK_ESCAPE || k == KeyEvent.VK_Q)
+			quit.toggle(flag);
+	}	
 }
