@@ -1,6 +1,7 @@
 package ipeer.jumper.gui;
 
 import ipeer.jumper.engine.Engine;
+import ipeer.jumper.sound.Sound;
 import ipeer.jumper.util.Colour;
 
 import java.awt.Graphics2D;
@@ -45,7 +46,10 @@ public class GuiButton extends Gui {
 	}
 	
 	public boolean mousePressed(Engine engine, int x, int y) {
-		return enabled && x > xPos && x < (xPos + width) && y < (yPos + height) && y > yPos;
+		boolean a = enabled && x > xPos && x < (xPos + width) && y < (yPos + height) && y > yPos;
+//		if (a)
+//			Sound.select.play();
+		return a;
 	}
 	
 	

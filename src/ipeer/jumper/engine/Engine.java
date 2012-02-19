@@ -8,6 +8,7 @@ import ipeer.jumper.gui.Gui;
 import ipeer.jumper.gui.GuiMainMenu;
 import ipeer.jumper.gui.GuiPauseScreen;
 import ipeer.jumper.level.Level;
+import ipeer.jumper.sound.Sound;
 import ipeer.jumper.util.Colour;
 import ipeer.jumper.util.Debug;
 
@@ -167,6 +168,7 @@ public class Engine extends Canvas implements Runnable {
 			for (int i = 0; i < 20; i++) {
 				level.addEntity(new EntityCloud(new Random().nextInt(width), new Random().nextInt(200)));
 			}
+			Sound.levelstart.play();
 		} catch (OutOfMemoryError e) {
 			Debug.p("***** OUT OF MEMORY *****");
 		}
