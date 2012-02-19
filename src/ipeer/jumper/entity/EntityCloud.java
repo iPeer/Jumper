@@ -2,7 +2,9 @@ package ipeer.jumper.entity;
 
 import ipeer.jumper.engine.Engine;
 import ipeer.jumper.util.Colour;
+import ipeer.jumper.util.Debug;
 
+import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import java.util.Random;
 
@@ -10,11 +12,15 @@ public class EntityCloud extends Entity {
 
 	public EntityCloud(int x, int y) {
 		name = "Cloud";
-		height = new Random().nextInt(5) + 5;
-		width = new Random().nextInt(10) + 5;
+		height = new Random().nextInt(20) + 5;
+		width = height + new Random().nextInt(10) + 5;
 		this.x = x;
 		this.y = y;
-		this.movement = /*new Random().nextInt(1) + 1*/1;
+		dx = new Random().nextInt(2000);
+		/*movement = new Random().nextInt(10) + 1;
+		Debug.p("Set movement to "+movement+" and dx to "+dx);*/
+		movement = 1;
+		transparency = new Random().nextFloat();
 	}
 
 	public void tick() {
@@ -29,12 +35,20 @@ public class EntityCloud extends Entity {
 	public void render() {
 		Graphics2D g = Engine.g;
 		g.setColor(Colour.WHITE);
-		g.fillRect(getX(), getY(), width, height);
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, transparency));
+		g.fillRoundRect(getX(), getY(), width, height, 2, 3);
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
 
 	}
+	
+	public void setHorizontal(double dx) {
+		this.dx = dx;
+	}
 
-	private int movement;
+	//private int movement;
 	private Random rand = new Random();
+	private float transparency;
+	//private double dx;
 
 
 }

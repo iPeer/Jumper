@@ -34,7 +34,7 @@ public class GuiConfirmQuit extends Gui {
 	}
 	
 	public boolean pausesGame() {
-		return true;
+		return !(parent instanceof GuiMainMenu);
 	}
 	
 	private Engine engine;

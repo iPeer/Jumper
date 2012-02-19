@@ -32,8 +32,24 @@ public class Entity {
 		this.x = x;
 	}
 	
+	public void setX(double x) {
+		this.doubleX = x;
+	}
+	
+	public void setY(double y) {
+		this.doubleY = y;
+	}
+	
 	public void setY(int y) {
 		this.y = y;
+	}
+	
+	public double getDX() {
+		return this.doubleX;
+	}
+	
+	public double getDY() {
+		return this.doubleY;
 	}
 	
 	public int getX() {
@@ -61,6 +77,9 @@ public class Entity {
 	public int x, y;
 	private boolean isOnGround;
 	public int width, height;
+	public double doubleX, doubleY;
+	public int movement;
+	public double dx;
 	
 	
 }

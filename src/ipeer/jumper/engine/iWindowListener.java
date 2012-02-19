@@ -23,6 +23,7 @@ public class iWindowListener implements WindowListener {
 	@Override
 	public void windowClosing(WindowEvent arg0) {
 		Engine.isRunning = false;
+		System.exit(0);
 
 	}
 

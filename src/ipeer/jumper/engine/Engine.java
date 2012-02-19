@@ -16,6 +16,7 @@ import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferStrategy;
@@ -62,11 +63,11 @@ public class Engine extends Canvas implements Runnable {
 			}
 		}
 		engine = new Engine();
-		frame = new JFrame(title); // Change Game Engine to your game's name!
+		frame = new Frame(title); // Change Game Engine to your game's name!
 		// main.setPreferredSize(new Dimension(width, height));
 		engine.setSize(width - 10, height - 10);
 		// frame.setBounds(0, 0, width, height);
-		frame.setDefaultCloseOperation(3);
+		//frame.setDefaultCloseOperation(3);
 		frame.setLayout(new BorderLayout());
 		frame.add(engine, "Center");
 		frame.addWindowListener(new iWindowListener());
@@ -129,10 +130,11 @@ public class Engine extends Canvas implements Runnable {
 			} catch (OutOfMemoryError e) {
 				Debug.p("***** OUT OF MEMORY! *****");
 			}
-			if (!hasFocus() && gui == null) {
-				setGUI(new GuiPauseScreen(this));
+			if (!hasFocus()) {
+				if (gui == null)
+					setGUI(new GuiPauseScreen(this));
 				try {
-					Thread.sleep(1000 / 29);
+					Thread.sleep(1000 / 30);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -145,7 +147,7 @@ public class Engine extends Canvas implements Runnable {
 		levelLoading = true;
 		Level.clear();
 		level = Level.loadLevel(this, "Menu");
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < 35; i++) {
 			level.addEntity(new EntityCloud(new Random().nextInt(width), new Random().nextInt(200)));
 		}
 		this.setGUI(new GuiMainMenu(this));
@@ -257,11 +259,21 @@ public class Engine extends Canvas implements Runnable {
 		g.drawRect(0, 0, width - 1, height - 1);
 
 		g.setColor(Colour.WHITE);
-		g.drawString("Entities", 2, 12);
+		g.drawString("Entities ("+level.entities.size()+")", 2, 12);
+		int x = 0;
 		for (int i = 0; i < level.entities.size(); i++) {
-			Entity e = level.entities.get(i);
-			g.drawString("\"" + e.name + "\" - " + e.getX() + ", " + e.getY() + ", " + e.isOnGround(), 2, 12 * (i + 3));
+			if (i < 35) {
+				Entity e = level.entities.get(i);
+				g.drawString("\"" + e.name + "\" - " + e.getX() + ", " + e.getY() + ", " + e.isOnGround()+(e instanceof EntityCloud ? ", "+e.movement+", "+e.dx : ""), 2, 12 * (i + 3));
+			}
+			else {
+				x++;
+			}
 		}
+		if (x > 0) {
+			g.drawString(x+" more...", 2, 12 * (35 + 3));
+		}
+		
 
 	}
 
@@ -282,7 +294,7 @@ public class Engine extends Canvas implements Runnable {
 	public static final String VERSION = "1.0";
 	public static Graphics2D g;
 	private TextRenderer textRenderer = new TextRenderer();
-	private static JFrame frame;
+	private static Frame frame;
 	private Level level;
 	private static Engine engine;
 	public Player player;
