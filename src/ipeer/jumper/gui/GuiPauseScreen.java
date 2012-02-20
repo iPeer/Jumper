@@ -12,9 +12,10 @@ public class GuiPauseScreen extends Gui {
 		this.engine = engine;
 		g = Engine.g;
 		title = "Game Menu";
-		controls.add(new GuiButton(0,(Engine.width - 200) /2, (Engine.height / 2) - 32, "Back to Game"));
-		controls.add(new GuiButton(2,(Engine.width - 200) /2, (Engine.height / 2) + 2, "Back to Title"));
-		controls.add(new GuiButton(1,(Engine.width - 200) /2, (Engine.height / 2) + 36, "Quit Game"));
+		controls.add(new GuiButton(3,(Engine.width - 200) /2, (Engine.height / 2) - 32, "Restart Level"));
+		controls.add(new GuiButton(0,(Engine.width - 200) /2, (Engine.height / 2) + 2, "Back to Game"));
+		controls.add(new GuiButton(2,(Engine.width - 200) /2, (Engine.height / 2) + 36, "Back to Title"));
+		controls.add(new GuiButton(1,(Engine.width - 200) /2, (Engine.height / 2) + 70, "Quit Game"));
 	}
 	
 	public void render() {
@@ -40,6 +41,9 @@ public class GuiPauseScreen extends Gui {
 		}
 		if (button.id == 2) {
 			engine.loadMenuScreen();
+		}
+		if (button.id == 3) {
+			engine.restartCurrentlevel();
 		}
 	}
 	

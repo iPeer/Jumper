@@ -3,15 +3,21 @@ package ipeer.jumper.level;
 import ipeer.jumper.engine.Engine;
 import ipeer.jumper.entity.Entity;
 import ipeer.jumper.entity.Player;
+import ipeer.jumper.error.IncorrectLevelSizeError;
+import ipeer.jumper.error.LevelIsNullError;
+import ipeer.jumper.gui.GuiLevelError;
+import ipeer.jumper.gui.GuiLevelLoading;
 import ipeer.jumper.level.blocks.AirBlock;
 import ipeer.jumper.level.blocks.Block;
 import ipeer.jumper.level.blocks.GrassBlock;
 import ipeer.jumper.level.blocks.LavaBlock;
 import ipeer.jumper.level.blocks.SpawnBlock;
-import ipeer.jumper.level.blocks.TestBlock;
+import ipeer.jumper.level.blocks.StoneBlock;
+import ipeer.jumper.level.blocks.SolidBlock;
 import ipeer.jumper.util.Colour;
 import ipeer.jumper.util.Debug;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
@@ -29,13 +35,13 @@ import javax.imageio.ImageIO;
 public class Level {
 
 	public Level (/*int id, String file, int width, int height*/) {
-		TestBlock = new TestBlock();
 		entities = new ArrayList<Entity>();
 	}
 
 	public void init(Engine engine, int width, int height, int[] pixels, String name) {
 		this.engine = engine;
 		player = engine.player;
+		this.levelname = name;
 		//this.player = player;
 		w = width;
 		h = height;
@@ -59,13 +65,23 @@ public class Level {
 				colourBlock(x, y, blocks[x + y * w], col);
 			}
 		}
-		this.image = createImageForLevel(/*pixels,*/ w, h, name);
+		try {
+			this.image = createImageForLevel(/*pixels,*/ w, h, name);
+		}
+		catch (IncorrectLevelSizeError e) {
+			engine.setGUI(new GuiLevelError(1, engine, true));
+		}
+
 	}
-	
-	private BufferedImage createImageForLevel(/*int[] pixels,*/ int w, int h, String name) {
+
+	private BufferedImage createImageForLevel(/*int[] pixels,*/ int w, int h, String name) throws IncorrectLevelSizeError {
 		BufferedImage i = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB); // 2
+		int a1 = i.getWidth();
+		int b1 = i.getHeight();
+		if (a1+b1 != 1334)
+			throw new IncorrectLevelSizeError();
 		g = i.createGraphics();
-		if (Arrays.asList("test", "menu").contains(name.toLowerCase())) {
+		if (Arrays.asList("test", "menu", "menu2").contains(name.toLowerCase())) {
 			g.setPaint(new GradientPaint(0, 0, new Colour(0x9FE4FF), 0, Engine.height, Colour.CYAN));
 			g.fillRect(0, 0, Engine.width, Engine.height);
 		}
@@ -83,7 +99,7 @@ public class Level {
 				}
 			}
 		}
-		Engine.levelLoading = false;
+		engine.setGUI(engine.gui.parent);
 		return i;
 	}
 
@@ -99,18 +115,21 @@ public class Level {
 		//			block.col = 0xFFFFFF;
 		if (col == 0x65B6AE) {
 			xSpawn = x;
-			ySpawn = y - Player.getHeight();
+			ySpawn = (y - 10) - Player.getHeight();
 			Debug.p("Spawn is at: ("+xSpawn+", "+ySpawn+")");
 		}
 		if (col == 0x4CFF00) {
 			block.col = new Colour(76, new Random().nextInt(40)+215, 0).getRGB();
+		}
+		if (col == 0x404040) {
+			block.col = new Colour(new Random().nextInt(10) + 40, 40, 40).getRGB();
 		}
 
 	}
 
 	protected Block getBlock(int x, int y, int col) {
 		if (col == 0x000000) {
-			return new TestBlock();
+			return new SolidBlock();
 		}
 		if (col == 0xFF0000) {
 			return new LavaBlock();
@@ -121,11 +140,15 @@ public class Level {
 		if (col == 0x4CFF00) {
 			return new GrassBlock();
 		}
+		if (col == 0x404040) {
+			return new StoneBlock();
+		}
 		return new AirBlock();
 	}
 
-	public static Level loadLevel(Engine engine, String name) {
-		Engine.levelLoading = true;
+	public static Level loadLevel(Engine engine, String name) throws LevelIsNullError {
+		engine.setGUI(new GuiLevelLoading(engine, engine.gui));
+		Engine engine2 = engine;
 		InputStream in;
 		Level level;
 		try {
@@ -140,6 +163,9 @@ public class Level {
 			int[] pixels = new int[wi * hi];
 			i.getRGB(0, 0, wi, hi, pixels, 0, wi);
 			level = getLevelClassForName(name);
+			if (level == null) {
+				throw new LevelIsNullError();
+			}
 			level.init(engine, wi, hi, pixels, name);
 			//level.createStill(engine, wi, hi, pixels);
 			LevelCache.put(name, level);
@@ -162,9 +188,9 @@ public class Level {
 			level = (Level)Class.forName("ipeer.jumper.level."+name+"Level").newInstance();
 		}
 		catch (Exception e) {
+			Engine.engine.setGUI(new GuiLevelError(3, Engine.engine, false));
 			Debug.p("Unable to load level!");
 			e.printStackTrace();
-			Engine.stopDueToError(e);
 		}
 		return level;
 	}
@@ -183,30 +209,43 @@ public class Level {
 	}
 
 	public boolean checkTerrainCollision(Player p) {
-		return getBlock(p.x + (p.width + 1), p.y).isSolid || getBlock(p.x, p.y + (p.height + 1)).isSolid || getBlock(p.x - 1, p.y - 1).isSolid || getBlock(p.x + (p.width + 1), p.y + (p.height + 1)).isSolid;
+		return getBlock(p.x + p.width, p.y).isSolid || getBlock(p.x, p.y + p.height + 2).isSolid || getBlock(p.x, p.y).isSolid || getBlock(p.x + p.width, p.y + p.height).isSolid;
 	}
-	
-	public boolean isPlayerOnSolidBlock(Player p) {
-		return getBlock(p.x + (p.height + 1), p.y).isSolid;
+
+	public boolean isPlayerOnSolidBlock(Player p) { // This is gay
+		return getBlock(p.getX(), p.getY() + p.height).isSolid || getBlock(p.getX() + (p.height), p.getY() + ((p.height / 2 - 2) + p.width)).isSolid;
 	}
-	
-	public boolean playerIsInBlock(Player p) {
-		boolean x = false;
-		boolean y = false;
-		for (int y1 = p.y; y1 < (p.y + p.height); y1++) {
-			y = getBlock(p.x + 1, y1 + 1).isSolid;
+
+	public boolean checkSidewaysCollision(Player p, int dir) {
+		if (dir == 0) {
+			for (int i = p.getY();i < p.getY()+p.height; i++) {
+				if (getBlock(p.getX() - 2, i).isSolid)
+					return false;
+			}
 		}
-		for (int x1 = p.x; x1 < (p.x + p.width); x1++) {
-			x = getBlock(x1 + 1, p.y + 1).isSolid;
+		else {
+			for (int i1 = p.getX() + p.width;i1 < p.getY()+p.height; i1++) {
+				if (getBlock(p.getX() + (p.height / 2 - 1) + (p.width), i1).isSolid)
+					return false;
+			}
 		}
-		return x || y;
+		return true;
 	}
-	
+
 	public void render() {
 		BufferedImage i = image;
+		//		int w1 = i.getWidth();
+		//		int h1 = i.getHeight();
+		//		if (!(Integer.toString(w1)+Integer.toString(h1)).equals("854480")) {
+		//			//Level.clear();
+		//			engine.setGUI(new GuiLevelError(1, engine, true));
+		//			return;
+		//		}
 		g = Engine.g;
 		g.drawImage(i, 0, 0, null);
 	}
+
+	public void tick() { }
 
 	public int w, h;
 	private int id;
@@ -221,5 +260,6 @@ public class Level {
 	private Graphics2D g;
 	private Engine engine;
 	private BufferedImage image;
+	public String levelname;
 
 }

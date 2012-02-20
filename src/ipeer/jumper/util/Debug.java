@@ -8,6 +8,10 @@ public class Debug {
 	public static void p(String s) {
 		System.out.println(s);
 	}
+	
+	public static void p(float f) {
+		System.out.println(f);
+	}
 
 	public static void p(int i) {
 		System.out.println(i);
@@ -24,6 +28,10 @@ public class Debug {
 
 	public static void p(URL url) {
 		System.out.println(url);
+	}
+
+	public static void p(boolean b) {
+		System.out.println(b);
 	}
 	
 }

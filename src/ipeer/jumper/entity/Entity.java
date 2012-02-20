@@ -69,6 +69,15 @@ public class Entity {
 		setY(y);
 	}
 	
+	public void jump() {
+		jumping = true;
+		jumppeak = getY() + jumpheight;
+	}
+	
+	public boolean isJumping() {
+		return jumping;
+	}
+	
 	
 	public boolean isDead;
 	public int health = 20;
@@ -80,6 +89,11 @@ public class Entity {
 	public double doubleX, doubleY;
 	public int movement;
 	public double dx;
+	public int jumpheight = 10;
+	public boolean jumping = false;
+	public int jumppeak;
+	public long lastjumptime = 0;
+
 	
 	
 }

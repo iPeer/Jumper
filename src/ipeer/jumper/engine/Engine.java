@@ -3,19 +3,20 @@ package ipeer.jumper.engine;
 import ipeer.jumper.entity.Entity;
 import ipeer.jumper.entity.EntityCloud;
 import ipeer.jumper.entity.Player;
+import ipeer.jumper.error.LevelIsNullError;
 import ipeer.jumper.gfx.TextRenderer;
 import ipeer.jumper.gui.Gui;
+import ipeer.jumper.gui.GuiLevelError;
+import ipeer.jumper.gui.GuiLevelLoading;
 import ipeer.jumper.gui.GuiMainMenu;
 import ipeer.jumper.gui.GuiPauseScreen;
 import ipeer.jumper.level.Level;
-import ipeer.jumper.sound.Sound;
 import ipeer.jumper.util.Colour;
 import ipeer.jumper.util.Debug;
 
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.Graphics;
@@ -24,8 +25,6 @@ import java.awt.image.BufferStrategy;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 import java.util.Random;
-
-import javax.swing.JFrame;
 
 public class Engine extends Canvas implements Runnable {
 
@@ -85,6 +84,7 @@ public class Engine extends Canvas implements Runnable {
 	}
 
 	public void init() {
+		//Sound.init.play();
 		input = new KeyboardListener(engine);
 		loadMenuScreen();
 	}
@@ -143,17 +143,28 @@ public class Engine extends Canvas implements Runnable {
 
 		}
 	}
-	
+
 	public void loadMenuScreen() {
+		loadMenuScreen(false);
+	}
+
+	public void loadMenuScreen(boolean errored) {
 		levelLoading = true;
 		Level.clear();
-		level = Level.loadLevel(this, "Menu");
-		for (int i = 0; i < 35; i++) {
-			level.addEntity(new EntityCloud(new Random().nextInt(width), new Random().nextInt(200)));
+		try {
+			level = Level.loadLevel(this, "Menu2");
+			for (int i = 0; i < 35; i++) {
+				level.addEntity(new EntityCloud(new Random().nextInt(width), new Random().nextInt(200)));
+			}
+		} catch (LevelIsNullError e) {
+			this.setGUI(new GuiLevelError(2, this, false));
+			e.printStackTrace();
+			return;
 		}
-		this.setGUI(new GuiMainMenu(this));
+		if (!errored)
+			this.setGUI(new GuiMainMenu(this));
 	}
-	                           
+
 
 	public void startGame() {
 		try {
@@ -162,15 +173,18 @@ public class Engine extends Canvas implements Runnable {
 			player = new Player();
 			level = Level.loadLevel(this, "Test");
 			player.x = level.xSpawn;
-			player.y = level.ySpawn - 2;
-			player.move(level.xSpawn, level.ySpawn - 2);
+			player.y = level.ySpawn;
+			player.move(level.xSpawn, level.ySpawn + 10);
 			level.addEntity(player);
 			for (int i = 0; i < 20; i++) {
 				level.addEntity(new EntityCloud(new Random().nextInt(width), new Random().nextInt(200)));
 			}
-			Sound.levelstart.play();
+			//Sound.levelstart.play();
 		} catch (OutOfMemoryError e) {
 			Debug.p("***** OUT OF MEMORY *****");
+		} catch (LevelIsNullError e) {
+			this.setGUI(new GuiLevelError(2, this, true));
+			e.printStackTrace();
 		}
 	}
 
@@ -184,13 +198,16 @@ public class Engine extends Canvas implements Runnable {
 			System.exit(0);
 		}
 		if (input.reload.down)
-			startGame();
+			restartCurrentlevel();
 		if (input.debug.down && System.currentTimeMillis() - lastPress > 150) {
 			debugActive = !debugActive;
 			lastPress = System.currentTimeMillis();
 		}
 		if (!isPaused && (gui == null || !gui.pausesGame())) {
+			if (input.jump.down && !player.jumping && player.isOnGround)
+				player.jump();
 			input.tick();
+			level.tick();
 			for (int i = 0; i < level.entities.size(); i++) {
 				Entity e = level.entities.get(i);
 				e.tick();
@@ -215,25 +232,16 @@ public class Engine extends Canvas implements Runnable {
 		// This will render the game screen black
 		g.setColor(Colour.BLACK);
 		g.fillRect(0, 0, getWidth(), getHeight());
-		if (!levelLoading) {
-			level.render();
-		} else {
-			g.setColor(Colour.RED);
-			String loadingString = "Loading level..";
-			Font f = g.getFont();
-			g.setFont(new Font(g.getFont().getName(), Font.PLAIN, 32));
-			int l = g.getFontMetrics().stringWidth(loadingString);
-			g.drawString(loadingString, (width - l) / 2, height / 2);
-			g.setFont(f);
-		}
+		//if (!levelLoading)
+		level.render();
 		for (int i = 0; i < level.entities.size(); i++) {
 			Entity e = level.entities.get(i);
 			e.render();
 		}
-		
-		if (gui != null && !levelLoading)
+
+		if (gui != null/* && !levelLoading*/)
 			gui.render();
-		
+
 		if (debugActive)
 			renderDebug();
 
@@ -266,7 +274,7 @@ public class Engine extends Canvas implements Runnable {
 		for (int i = 0; i < level.entities.size(); i++) {
 			if (i < 35) {
 				Entity e = level.entities.get(i);
-				g.drawString("\"" + e.name + "\" - " + e.getX() + ", " + e.getY() + ", " + e.isOnGround()+(e instanceof EntityCloud ? ", "+e.movement+", "+e.dx : ""), 2, 12 * (i + 3));
+				g.drawString("\"" + e.name + "\" - " + e.getX() + ", " + e.getY() + ", " + e.isOnGround()+", "+e.isJumping(), 2, 12 * (i + 3));
 			}
 			else {
 				x++;
@@ -275,7 +283,7 @@ public class Engine extends Canvas implements Runnable {
 		if (x > 0) {
 			g.drawString(x+" more...", 2, 12 * (35 + 3));
 		}
-		
+
 
 	}
 
@@ -288,7 +296,31 @@ public class Engine extends Canvas implements Runnable {
 	public void setGUI(Gui gui) {
 		this.gui = gui;
 	}
-	
+
+	public void restartCurrentlevel() {
+		String lname = level.levelname;
+		Debug.p(level.levelname);
+		if (!lname.equals("Menu")) {
+			try {
+				Level.clear();
+				player = new Player();
+				level = Level.loadLevel(this, lname);
+				player.x = level.xSpawn;
+				player.y = level.ySpawn;
+				player.move(level.xSpawn, level.ySpawn);
+				level.addEntity(player);
+				if (lname.equals("Test")) {
+					for (int i = 0; i < 20; i++) {
+						level.addEntity(new EntityCloud(new Random().nextInt(width), new Random().nextInt(200)));
+					}
+				}
+			} catch (LevelIsNullError e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+	}
+
 	private int lastframes, lastticks;
 	public static boolean debugActive = false;
 	public static int height = 480, width = 854;
@@ -297,8 +329,8 @@ public class Engine extends Canvas implements Runnable {
 	public static Graphics2D g;
 	private TextRenderer textRenderer = new TextRenderer();
 	private static Frame frame;
-	private Level level;
-	private static Engine engine;
+	public Level level;
+	public static Engine engine;
 	public Player player;
 	public static int BlockSize = 3;
 	public static boolean levelLoading = false;
