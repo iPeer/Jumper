@@ -22,7 +22,7 @@ public class Player extends Entity {
 		if (Engine.debugActive) {
 			g.setColor(Colour.YELLOW);
 			g.drawLine(getX() + width, 0, getX() + width, Engine.height);
-			g.drawLine(getX() + width, getY() + height, Engine.width, getY() + height);
+			g.drawLine(0, getY() + height, Engine.width, getY() + height);
 		}
 	}
 

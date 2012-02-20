@@ -47,6 +47,10 @@ public class GuiPauseScreen extends Gui {
 		}
 	}
 	
+	public boolean hasParent() {
+		return false;
+	}
+	
 	private Engine engine;
 	private Graphics2D g;
 	

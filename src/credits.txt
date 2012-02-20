@@ -1,0 +1,49 @@
+--
+
+&u"Jumper" Credits
+
+--
+
+&uCoding:
+Christopher 'iPeer' Wignall
+	
+&uTesting:
+Auron956
+Roxanne Newman
+Christopher 'iPeer' Wignall
+	
+&uSounds:
+"sfxr" by DrPetter
+	
+&uAdditional Sounds:
+junggle @ http://freesound.org
+anbo @ http://freesound.org
+	
+	
+--
+	
+&uSiMPLE Studios
+
+--
+
+&uCode Lead:
+Christopher 'iPeer' Wignall
+	
+&uAdditional Coders:
+Roxanne Newman
+Charlotte Newman
+Jason Burns
+	
+&uQA Lead:
+Roxanne Newman
+	
+&uAdditional QA:
+Christopher 'iPeer' Wignall
+Megan Micheals
+Charlotte Newman
+
+
+
+Thanks for playing!
+
+	

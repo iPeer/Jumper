@@ -81,20 +81,21 @@ public class Level {
 		if (a1+b1 != 1334)
 			throw new IncorrectLevelSizeError();
 		g = i.createGraphics();
-		if (Arrays.asList("test", "menu", "menu2").contains(name.toLowerCase())) {
+		if (Arrays.asList("test", "menu", "menu2", "credits").contains(name.toLowerCase())) {
 			g.setPaint(new GradientPaint(0, 0, new Colour(0x9FE4FF), 0, Engine.height, Colour.CYAN));
 			g.fillRect(0, 0, Engine.width, Engine.height);
 		}
 		int a = Engine.BlockSize;
+		a = 1;
 		for (int y = 0; y < h; y+=a) {
 			for (int x = 0; x < w; x+=a) {
 				Block b = getBlock(x, y);
 				if (!b.name.equals("Air Block")) {
 					g.setColor(new Color(b.col));
-					if (!Arrays.asList("Lava Block", "Water Block").contains(b.name)) { 
-						g.fillRect(x, y, a-1, a-1);
-					}
-					else
+//					if (!Arrays.asList("Lava Block", "Water Block").contains(b.name)) { 
+//						g.fillRect(x, y, a-1, a-1);
+//					}
+//					else
 						g.fillRect(x, y, a, a);
 				}
 			}

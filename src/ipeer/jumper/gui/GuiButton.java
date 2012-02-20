@@ -47,8 +47,8 @@ public class GuiButton extends Gui {
 	
 	public boolean mousePressed(Engine engine, int x, int y) {
 		boolean a = enabled && x > xPos && x < (xPos + width) && y < (yPos + height) && y > yPos;
-//		if (a)
-//			Sound.select.play();
+		if (a)
+			Sound.select.play();
 		return a;
 	}
 	

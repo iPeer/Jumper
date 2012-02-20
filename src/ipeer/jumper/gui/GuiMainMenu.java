@@ -14,13 +14,17 @@ public class GuiMainMenu extends Gui {
 		this.engine = engine;
 		controls.add(new GuiButton(0,(Engine.width - 200) /2, (Engine.height / 2) - 32, "Start Game"));
 		controls.add(new GuiButton(1,(Engine.width - 200) /2, (Engine.height / 2) + 2, "Quit"));
-		
+		controls.add(new GuiButton(2,(Engine.width - 200) /2, (Engine.height / 2) + 36, "Credits"));
 	}
 	
 	public void actionPerformed(GuiButton button) {
 		if (button.id == 0) {
 			engine.setGUI(null);
 			engine.startGame();
+		}
+		else if (button.id == 2) {
+			engine.loadCreditsScreen();
+			engine.setGUI(new GuiCredits(engine, this));
 		}
 		else {
 			engine.setGUI(new GuiConfirmQuit(this, engine));

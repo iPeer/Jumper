@@ -6,8 +6,8 @@ import ipeer.jumper.entity.Player;
 import ipeer.jumper.error.LevelIsNullError;
 import ipeer.jumper.gfx.TextRenderer;
 import ipeer.jumper.gui.Gui;
+import ipeer.jumper.gui.GuiCredits;
 import ipeer.jumper.gui.GuiLevelError;
-import ipeer.jumper.gui.GuiLevelLoading;
 import ipeer.jumper.gui.GuiMainMenu;
 import ipeer.jumper.gui.GuiPauseScreen;
 import ipeer.jumper.level.Level;
@@ -143,6 +143,20 @@ public class Engine extends Canvas implements Runnable {
 
 		}
 	}
+	
+	public void loadCreditsScreen() {
+		levelLoading = true;
+		Level.clear();
+		try {
+			level = Level.loadLevel(this, "Credits");
+			for (int i = 0; i < 35; i++) {
+				level.addEntity(new EntityCloud(new Random().nextInt(width), new Random().nextInt(200)));
+			}
+		}
+		catch (Exception e) {
+			Debug.p("Unable to load credits level!");
+		}
+	}
 
 	public void loadMenuScreen() {
 		loadMenuScreen(false);
@@ -190,7 +204,13 @@ public class Engine extends Canvas implements Runnable {
 
 	public void tick() {
 		if (input.pause.down && System.currentTimeMillis() - lastPress > 150 && !(gui instanceof GuiMainMenu)/* && !(gui instanceof GuiDeathMenu)*/) {
-			setGUI((gui instanceof GuiPauseScreen ? gui.parent : new GuiPauseScreen(this)));
+			if (gui instanceof GuiCredits) {
+				this.loadMenuScreen();
+			}
+			else if ((gui != null) && gui.hasParent()) 
+				this.setGUI(gui.parent);
+			else
+				setGUI(new GuiPauseScreen(this));
 			lastPress = System.currentTimeMillis();
 		}
 		if (input.quit.down) {
@@ -203,7 +223,7 @@ public class Engine extends Canvas implements Runnable {
 			debugActive = !debugActive;
 			lastPress = System.currentTimeMillis();
 		}
-		if (!isPaused && (gui == null || !gui.pausesGame())) {
+		if (!isPaused && ((gui == null || gui instanceof GuiCredits) || !gui.pausesGame())) {
 			if (input.jump.down && !player.jumping && player.isOnGround)
 				player.jump();
 			input.tick();

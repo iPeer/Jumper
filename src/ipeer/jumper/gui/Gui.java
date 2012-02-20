@@ -28,6 +28,10 @@ public class Gui {
 	
 	private Graphics g;
 
+	public boolean hasParent() {
+		return !(parent == null);
+	}
+	
 	public void render() {
 		for (int c = 0; c < controls.size(); c++) {
 			GuiButton button = (GuiButton)controls.get(c);
